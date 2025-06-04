@@ -1,14 +1,14 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Switch } from '@/components/ui/switch'
-import { NavigationItem } from '@/lib/navigation'
-import { LogOut, Key, Save } from 'lucide-react'
+import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Switch } from "@/components/ui/switch"
+import { NavigationItem } from "@/lib/navigation"
+import { LogOut, Key, Save, Lock, AlertCircle } from "lucide-react"
 import {
   Dialog,
   DialogContent,
@@ -21,48 +21,39 @@ import {
 export default function AdminDashboard() {
   const router = useRouter()
   const [navigationItems, setNavigationItems] = useState<NavigationItem[]>([])
-  const [loading, setLoading] = useState(true)
+  const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [adminInfo, setAdminInfo] = useState<{ id: string; username: string } | null>(null)
+  const [success, setSuccess] = useState<string | null>(null)
+  const [isSaving, setIsSaving] = useState(false)
   const [showPasswordModal, setShowPasswordModal] = useState(false)
   const [currentPassword, setCurrentPassword] = useState("")
   const [newPassword, setNewPassword] = useState("")
   const [confirmPassword, setConfirmPassword] = useState("")
-  const [passwordError, setPasswordError] = useState<string | null>(null)
   const [isChangingPassword, setIsChangingPassword] = useState(false)
+  const [passwordError, setPasswordError] = useState<string | null>(null)
 
   useEffect(() => {
-    // Check for admin info in localStorage
-    const storedAdminInfo = localStorage.getItem('adminInfo')
-    if (!storedAdminInfo) {
-      router.push('/admin/login')
-      return
-    }
-
-    try {
-      const parsedInfo = JSON.parse(storedAdminInfo)
-      setAdminInfo(parsedInfo)
-    } catch (err) {
-      console.error('Error parsing admin info:', err)
-      router.push('/admin/login')
-    }
-  }, [router])
-
-  useEffect(() => {
-    // Fetch navigation items
     const fetchNavigationItems = async () => {
       try {
-        const response = await fetch('/api/admin/navigation')
+        // Check for admin info in localStorage
+        const adminInfo = localStorage.getItem("adminInfo")
+        if (!adminInfo) {
+          router.push("/admin/login")
+          return
+        }
+
+        const response = await fetch("/api/admin/navigation")
         if (!response.ok) {
-          throw new Error('Failed to fetch navigation items')
+          throw new Error("Failed to fetch navigation items")
         }
         const data = await response.json()
-        setNavigationItems(data.items)
+        setNavigationItems(Array.isArray(data) ? data : [])
       } catch (err) {
-        console.error('Error fetching navigation items:', err)
-        setError('Failed to load navigation items')
+        console.error("Error fetching navigation items:", err)
+        setError("Failed to load navigation items")
+        setNavigationItems([])
       } finally {
-        setLoading(false)
+        setIsLoading(false)
       }
     }
 
@@ -90,13 +81,9 @@ export default function AdminDashboard() {
       return
     }
 
-    if (!adminInfo?.id) {
-      setPasswordError("Admin information not found")
-      return
-    }
-
     setIsChangingPassword(true)
     try {
+      const adminInfo = JSON.parse(localStorage.getItem("adminInfo") || "{}")
       const response = await fetch('/api/admin/change-password', {
         method: 'POST',
         headers: {
@@ -122,7 +109,7 @@ export default function AdminDashboard() {
       setShowPasswordModal(false)
       
       // Show success message (you can use your toast notification system here)
-      alert('Password changed successfully')
+      setSuccess('Password changed successfully')
     } catch (err) {
       setPasswordError(err instanceof Error ? err.message : 'Failed to change password')
     } finally {
@@ -133,6 +120,7 @@ export default function AdminDashboard() {
   const handleSaveNavigation = async () => {
     try {
       setError('')
+      setIsSaving(true)
       const res = await fetch('/api/admin/navigation', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
@@ -141,9 +129,11 @@ export default function AdminDashboard() {
 
       if (!res.ok) throw new Error('Failed to save navigation items')
       
-      alert('Navigation items saved successfully!')
+      setSuccess('Navigation items saved successfully!')
     } catch (err) {
       setError('Failed to save navigation items')
+    } finally {
+      setIsSaving(false)
     }
   }
 
@@ -164,12 +154,15 @@ export default function AdminDashboard() {
     )
   }
 
-  if (loading) {
-    return <div className="min-h-screen flex items-center justify-center">Loading...</div>
-  }
-
-  if (error) {
-    return <div className="min-h-screen flex items-center justify-center">Error: {error}</div>
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading...</p>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -260,6 +253,11 @@ export default function AdminDashboard() {
                 <AlertDescription>{error}</AlertDescription>
               </Alert>
             )}
+            {success && (
+              <Alert className="mb-4">
+                <AlertDescription>{success}</AlertDescription>
+              </Alert>
+            )}
             <div className="space-y-4">
               {navigationItems.map((item) => (
                 <div key={item.id} className="flex items-center gap-4 p-4 border rounded-lg">
@@ -291,9 +289,15 @@ export default function AdminDashboard() {
                   </div>
                 </div>
               ))}
-              <Button onClick={handleSaveNavigation} className="w-full">
-                <Save className="w-4 h-4 mr-2" />
-                Save Changes
+              <Button onClick={handleSaveNavigation} className="w-full" disabled={isSaving}>
+                {isSaving ? (
+                  "Saving..."
+                ) : (
+                  <>
+                    <Save className="w-4 h-4 mr-2" />
+                    Save Changes
+                  </>
+                )}
               </Button>
             </div>
           </CardContent>

@@ -1,16 +1,18 @@
-import { NextResponse } from 'next/server'
-import { PrismaClient } from '@prisma/client'
+import { NextRequest, NextResponse } from 'next/server'
 import { NavigationItem } from '@/lib/navigation'
+import { prisma } from '@/lib/prisma'
 
-const prisma = new PrismaClient()
+// Remove edge runtime
+// export const runtime = 'edge'
 
 // Get navigation items
 export async function GET() {
   try {
     const items = await prisma.navigationItem.findMany({
-      orderBy: { order: 'asc' },
+      orderBy: { order: 'asc' }
     })
-    return NextResponse.json({ items })
+
+    return NextResponse.json(items)
   } catch (error) {
     console.error('Error fetching navigation items:', error)
     return NextResponse.json(
@@ -21,28 +23,28 @@ export async function GET() {
 }
 
 // Update navigation items
-export async function PUT(request: Request) {
+export async function PUT(request: NextRequest) {
   try {
-    const { items } = await request.json()
-
-    if (!Array.isArray(items)) {
+    const body = await request.json()
+    
+    if (!Array.isArray(body)) {
       return NextResponse.json(
-        { error: 'Invalid request: items must be an array' },
+        { error: 'Items must be an array' },
         { status: 400 }
       )
     }
 
     // Update all items in a transaction
     await prisma.$transaction(
-      items.map((item: NavigationItem) =>
+      body.map((item: NavigationItem) =>
         prisma.navigationItem.update({
           where: { id: item.id },
           data: {
             label: item.label,
             href: item.href,
             order: item.order,
-            isActive: item.isActive,
-          },
+            isExternal: item.isExternal
+          }
         })
       )
     )

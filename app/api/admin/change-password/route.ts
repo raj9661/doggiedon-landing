@@ -1,12 +1,20 @@
-import { NextResponse } from "next/server"
-import { PrismaClient } from "@prisma/client"
+import { NextRequest, NextResponse } from "next/server"
 import { compare, hash } from "bcryptjs"
+import { prisma } from "@/lib/prisma"
 
-const prisma = new PrismaClient()
+// Remove edge runtime
+// export const runtime = 'edge'
 
-export async function POST(request: Request) {
+interface ChangePasswordRequest {
+  adminId: string
+  currentPassword: string
+  newPassword: string
+}
+
+export async function POST(request: NextRequest) {
   try {
-    const { adminId, currentPassword, newPassword } = await request.json()
+    const body = await request.json() as ChangePasswordRequest
+    const { adminId, currentPassword, newPassword } = body
 
     if (!adminId || !currentPassword || !newPassword) {
       return NextResponse.json(

@@ -4,6 +4,7 @@ export interface NavigationItem {
   href: string
   order: number
   isActive: boolean
+  isExternal: boolean
 }
 
 // This will be replaced with data from the admin panel
@@ -13,42 +14,48 @@ export const defaultNavigationItems: NavigationItem[] = [
     label: "Home",
     href: "/",
     order: 1,
-    isActive: true
+    isActive: true,
+    isExternal: false
   },
   {
     id: "donate",
     label: "Donate",
     href: "/donations",
     order: 2,
-    isActive: true
+    isActive: true,
+    isExternal: false
   },
   {
     id: "ecommerce",
     label: "E-commerce",
     href: "/ecommerce",
     order: 3,
-    isActive: true
+    isActive: true,
+    isExternal: false
   },
   {
     id: "blog",
     label: "Blog",
     href: "/blog",
     order: 4,
-    isActive: true
+    isActive: true,
+    isExternal: false
   },
   {
     id: "about",
     label: "About Us",
     href: "#about",
     order: 5,
-    isActive: true
+    isActive: true,
+    isExternal: false
   },
   {
     id: "contact",
     label: "Contact",
     href: "#contact",
     order: 6,
-    isActive: true
+    isActive: true,
+    isExternal: false
   }
 ]
 

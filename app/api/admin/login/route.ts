@@ -1,8 +1,14 @@
-import { NextResponse } from 'next/server'
-import { PrismaClient } from '@prisma/client'
+import { NextRequest, NextResponse } from 'next/server'
 import { compare, hash } from 'bcryptjs'
+import { prisma } from '@/lib/prisma'
 
-const prisma = new PrismaClient()
+// Remove edge runtime
+// export const runtime = 'edge'
+
+interface LoginRequest {
+  username: string
+  password: string
+}
 
 // Initialize admin user if it doesn't exist
 async function initializeAdmin() {
@@ -22,13 +28,13 @@ async function initializeAdmin() {
   }
 }
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
     // Initialize admin user if it doesn't exist
     await initializeAdmin()
 
-    const { username, password } = await request.json()
-    console.log('Login attempt for username:', username)
+    const body = await request.json() as LoginRequest
+    const { username, password } = body
 
     if (!username || !password) {
       return NextResponse.json(
