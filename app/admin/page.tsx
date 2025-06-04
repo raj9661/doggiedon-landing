@@ -19,26 +19,36 @@ import {
 } from '@/components/ui/dialog'
 
 export default function AdminDashboard() {
+  const router = useRouter()
   const [navigationItems, setNavigationItems] = useState<NavigationItem[]>([])
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState('')
-  const [success, setSuccess] = useState('')
-  const router = useRouter()
-  const [showChangePassword, setShowChangePassword] = useState(false)
-  const [currentPassword, setCurrentPassword] = useState('')
-  const [newPassword, setNewPassword] = useState('')
-  const [confirmPassword, setConfirmPassword] = useState('')
-  const [passwordError, setPasswordError] = useState('')
+  const [error, setError] = useState<string | null>(null)
+  const [adminInfo, setAdminInfo] = useState<{ id: string; username: string } | null>(null)
+  const [showPasswordModal, setShowPasswordModal] = useState(false)
+  const [currentPassword, setCurrentPassword] = useState("")
+  const [newPassword, setNewPassword] = useState("")
+  const [confirmPassword, setConfirmPassword] = useState("")
+  const [passwordError, setPasswordError] = useState<string | null>(null)
+  const [isChangingPassword, setIsChangingPassword] = useState(false)
 
   useEffect(() => {
-    // Check if admin is logged in
-    const admin = localStorage.getItem('admin')
-    if (!admin) {
-      console.log('No admin found, redirecting to login')
+    // Check for admin info in localStorage
+    const storedAdminInfo = localStorage.getItem('adminInfo')
+    if (!storedAdminInfo) {
       router.push('/admin/login')
       return
     }
 
+    try {
+      const parsedInfo = JSON.parse(storedAdminInfo)
+      setAdminInfo(parsedInfo)
+    } catch (err) {
+      console.error('Error parsing admin info:', err)
+      router.push('/admin/login')
+    }
+  }, [router])
+
+  useEffect(() => {
     // Fetch navigation items
     const fetchNavigationItems = async () => {
       try {
@@ -59,46 +69,70 @@ export default function AdminDashboard() {
     fetchNavigationItems()
   }, [router])
 
-  const handleLogout = () => {
-    localStorage.removeItem('admin')
-    router.push('/admin/login')
+  const handleLogout = async () => {
+    try {
+      await fetch('/api/admin/logout', {
+        method: 'POST',
+      })
+      localStorage.removeItem('adminInfo')
+      router.push('/admin/login')
+    } catch (err) {
+      console.error('Logout error:', err)
+    }
   }
 
-  const handleChangePassword = async (e: React.FormEvent) => {
+  const handlePasswordChange = async (e: React.FormEvent) => {
     e.preventDefault()
-    setPasswordError('')
+    setPasswordError(null)
 
     if (newPassword !== confirmPassword) {
-      setPasswordError('New passwords do not match')
+      setPasswordError("New passwords don't match")
       return
     }
 
+    if (!adminInfo?.id) {
+      setPasswordError("Admin information not found")
+      return
+    }
+
+    setIsChangingPassword(true)
     try {
-      const res = await fetch('/api/admin/change-password', {
+      const response = await fetch('/api/admin/change-password', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ currentPassword, newPassword }),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          adminId: adminInfo.id,
+          currentPassword,
+          newPassword,
+        }),
       })
 
-      if (!res.ok) {
-        const data = await res.json()
-        throw new Error(data.message || 'Failed to change password')
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to change password')
       }
 
-      setShowChangePassword(false)
-      setCurrentPassword('')
-      setNewPassword('')
-      setConfirmPassword('')
-      router.push('/admin/login')
+      // Clear form and close modal
+      setCurrentPassword("")
+      setNewPassword("")
+      setConfirmPassword("")
+      setShowPasswordModal(false)
+      
+      // Show success message (you can use your toast notification system here)
+      alert('Password changed successfully')
     } catch (err) {
       setPasswordError(err instanceof Error ? err.message : 'Failed to change password')
+    } finally {
+      setIsChangingPassword(false)
     }
   }
 
   const handleSaveNavigation = async () => {
     try {
       setError('')
-      setSuccess('')
       const res = await fetch('/api/admin/navigation', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
@@ -107,9 +141,7 @@ export default function AdminDashboard() {
 
       if (!res.ok) throw new Error('Failed to save navigation items')
       
-      setSuccess('Navigation items saved successfully!')
-      // Clear success message after 3 seconds
-      setTimeout(() => setSuccess(''), 3000)
+      alert('Navigation items saved successfully!')
     } catch (err) {
       setError('Failed to save navigation items')
     }
@@ -146,7 +178,7 @@ export default function AdminDashboard() {
         <div className="flex justify-between items-center">
           <h1 className="text-3xl font-bold">Admin Dashboard</h1>
           <div className="flex gap-4">
-            <Dialog open={showChangePassword} onOpenChange={setShowChangePassword}>
+            <Dialog open={showPasswordModal} onOpenChange={setShowPasswordModal}>
               <DialogTrigger asChild>
                 <Button variant="outline">
                   <Key className="w-4 h-4 mr-2" />
@@ -160,7 +192,7 @@ export default function AdminDashboard() {
                     Enter your current password and choose a new one
                   </DialogDescription>
                 </DialogHeader>
-                <form onSubmit={handleChangePassword} className="space-y-4">
+                <form onSubmit={handlePasswordChange} className="space-y-4">
                   {passwordError && (
                     <Alert variant="destructive">
                       <AlertDescription>{passwordError}</AlertDescription>
@@ -202,8 +234,8 @@ export default function AdminDashboard() {
                       required
                     />
                   </div>
-                  <Button type="submit" className="w-full">
-                    Change Password
+                  <Button type="submit" className="w-full" disabled={isChangingPassword}>
+                    {isChangingPassword ? 'Changing...' : 'Change Password'}
                   </Button>
                 </form>
               </DialogContent>
@@ -226,11 +258,6 @@ export default function AdminDashboard() {
             {error && (
               <Alert variant="destructive" className="mb-4">
                 <AlertDescription>{error}</AlertDescription>
-              </Alert>
-            )}
-            {success && (
-              <Alert className="mb-4 bg-green-50 text-green-800 border-green-200">
-                <AlertDescription>{success}</AlertDescription>
               </Alert>
             )}
             <div className="space-y-4">

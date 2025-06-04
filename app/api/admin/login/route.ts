@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server'
-import { login } from '@/lib/auth'
-import { prisma } from '@/lib/prisma'
-import { hashPassword } from '@/lib/auth'
+import { PrismaClient } from '@prisma/client'
+import { compare, hash } from 'bcryptjs'
+
+const prisma = new PrismaClient()
 
 // Initialize admin user if it doesn't exist
 async function initializeAdmin() {
@@ -10,7 +11,7 @@ async function initializeAdmin() {
   })
 
   if (!adminExists) {
-    const hashedPassword = await hashPassword(process.env.ADMIN_PASSWORD!)
+    const hashedPassword = await hash(process.env.ADMIN_PASSWORD!, 10)
     await prisma.admin.create({
       data: {
         username: process.env.ADMIN_USERNAME!,
@@ -36,24 +37,37 @@ export async function POST(request: Request) {
       )
     }
 
-    const result = await login(username, password)
-    console.log('Login result:', result ? 'success' : 'failed')
+    // Find admin by username
+    const admin = await prisma.admin.findUnique({
+      where: { username }
+    })
 
-    if (!result) {
+    if (!admin) {
       return NextResponse.json(
-        { error: 'Invalid credentials' },
+        { error: 'Invalid username or password' },
         { status: 401 }
       )
     }
 
-    return NextResponse.json({ 
-      success: true,
-      admin: result
+    // Verify password
+    const isValidPassword = await compare(password, admin.password)
+    if (!isValidPassword) {
+      return NextResponse.json(
+        { error: 'Invalid username or password' },
+        { status: 401 }
+      )
+    }
+
+    // Return admin info (excluding password)
+    return NextResponse.json({
+      id: admin.id,
+      username: admin.username,
+      message: 'Login successful'
     })
   } catch (error) {
     console.error('Login error:', error)
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: 'Failed to login' },
       { status: 500 }
     )
   }

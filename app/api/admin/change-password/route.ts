@@ -1,63 +1,53 @@
-import { cookies } from 'next/headers'
-import { NextResponse } from 'next/server'
-import { verifyToken, changePassword } from '@/lib/auth'
-import { prisma } from '@/lib/prisma'
+import { NextResponse } from "next/server"
+import { PrismaClient } from "@prisma/client"
+import { compare, hash } from "bcryptjs"
+
+const prisma = new PrismaClient()
 
 export async function POST(request: Request) {
   try {
-    const cookieStore = await cookies()
-    const token = cookieStore.get('admin_token')
+    const { adminId, currentPassword, newPassword } = await request.json()
 
-    if (!token) {
+    if (!adminId || !currentPassword || !newPassword) {
       return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
+        { error: "All fields are required" },
+        { status: 400 }
       )
     }
 
-    const payload = await verifyToken(token.value)
-    if (!payload) {
-      return NextResponse.json(
-        { error: 'Invalid token' },
-        { status: 401 }
-      )
-    }
-
+    // Get admin from database
     const admin = await prisma.admin.findUnique({
-      where: { id: payload.adminId }
+      where: { id: adminId }
     })
 
     if (!admin) {
       return NextResponse.json(
-        { error: 'Admin not found' },
+        { error: "Admin not found" },
         { status: 404 }
       )
     }
 
-    const { currentPassword, newPassword } = await request.json()
-
-    if (!currentPassword || !newPassword) {
+    // Verify current password
+    const isValidPassword = await compare(currentPassword, admin.password)
+    if (!isValidPassword) {
       return NextResponse.json(
-        { error: 'Current password and new password are required' },
-        { status: 400 }
+        { error: "Current password is incorrect" },
+        { status: 401 }
       )
     }
 
-    const success = await changePassword(admin.id, currentPassword, newPassword)
-    if (!success) {
-      return NextResponse.json(
-        { error: 'Current password is incorrect' },
-        { status: 400 }
-      )
-    }
+    // Hash and update new password
+    const hashedPassword = await hash(newPassword, 10)
+    await prisma.admin.update({
+      where: { id: adminId },
+      data: { password: hashedPassword }
+    })
 
-    const response = NextResponse.json({ success: true })
-    response.cookies.delete('admin_token')
-    return response
+    return NextResponse.json({ message: "Password updated successfully" })
   } catch (error) {
-    console.error('Change password error:', error)
+    console.error("Error changing password:", error)
     return NextResponse.json(
-      { error: 'Failed to change password' },
+      { error: "Failed to change password" },
       { status: 500 }
     )
   }
