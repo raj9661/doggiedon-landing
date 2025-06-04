@@ -42,12 +42,18 @@ export default function AdminDashboard() {
           return
         }
 
-        const response = await fetch("/api/admin/navigation")
+        const response = await fetch("/api/admin/navigation", {
+          cache: 'no-store', // Disable caching
+          headers: {
+            'Cache-Control': 'no-cache' // Additional cache control
+          }
+        })
         if (!response.ok) {
           throw new Error("Failed to fetch navigation items")
         }
         const data = await response.json()
-        setNavigationItems(Array.isArray(data) ? data : [])
+        // The API returns { items: NavigationItem[] }
+        setNavigationItems(data.items || [])
       } catch (err) {
         console.error("Error fetching navigation items:", err)
         setError("Failed to load navigation items")
@@ -124,14 +130,17 @@ export default function AdminDashboard() {
       const res = await fetch('/api/admin/navigation', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ items: navigationItems }),
+        body: JSON.stringify(navigationItems),
       })
 
-      if (!res.ok) throw new Error('Failed to save navigation items')
+      if (!res.ok) {
+        const data = await res.json()
+        throw new Error(data.error || 'Failed to save navigation items')
+      }
       
       setSuccess('Navigation items saved successfully!')
     } catch (err) {
-      setError('Failed to save navigation items')
+      setError(err instanceof Error ? err.message : 'Failed to save navigation items')
     } finally {
       setIsSaving(false)
     }
