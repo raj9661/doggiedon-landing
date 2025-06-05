@@ -16,12 +16,31 @@ export default function Header() {
   useEffect(() => {
     const fetchNavigationItems = async () => {
       try {
+        console.log('Fetching navigation items...')
         const response = await fetch('/api/admin/navigation')
+        console.log('Navigation API response status:', response.status)
+        
         if (!response.ok) {
-          throw new Error('Failed to fetch navigation items')
+          const errorText = await response.text()
+          console.error('Navigation API error:', {
+            status: response.status,
+            statusText: response.statusText,
+            body: errorText
+          })
+          throw new Error(`Failed to fetch navigation items: ${response.status} ${response.statusText}`)
         }
+        
         const data = await response.json()
+        console.log('Navigation items received:', data)
+        
+        if (!data.items || !Array.isArray(data.items)) {
+          console.error('Invalid navigation items data:', data)
+          throw new Error('Invalid navigation items data received')
+        }
+        
         const items = data.items.filter((item: NavigationItem) => item.isActive)
+        console.log('Filtered active navigation items:', items)
+        
         setNavigationItems(items)
         // Find the donate link
         const donateItem = items.find((item: NavigationItem) => item.label.toLowerCase() === 'donate')
@@ -30,6 +49,8 @@ export default function Header() {
         }
       } catch (err) {
         console.error('Error fetching navigation items:', err)
+        // Set empty navigation items on error
+        setNavigationItems([])
       } finally {
         setLoading(false)
       }

@@ -1,14 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
 import { prisma } from "@/lib/prisma"
-
-type NavigationItem = {
-  id: string
-  label: string
-  url: string
-  order: number
-  isExternal: boolean
-  isActive: boolean
-}
+import { defaultNavigationItems, NavigationItem } from "@/lib/navigation"
 
 type ResponseData = {
   items?: NavigationItem[]
@@ -23,6 +15,7 @@ const handler = async (
 ) => {
   if (req.method === 'GET') {
     try {
+      console.log('Fetching navigation items from database...')
       const items = await prisma.navigationItem.findMany({
         orderBy: { order: 'asc' },
         select: {
@@ -33,6 +26,19 @@ const handler = async (
           isActive: true
         }
       })
+      console.log('Found navigation items:', items)
+
+      if (!items || items.length === 0) {
+        console.log('No navigation items found in database')
+        // Return default items if none found in database
+        const defaultItems = defaultNavigationItems.map((item: NavigationItem) => ({
+          ...item,
+          url: item.href,
+          isExternal: item.href.startsWith('http://') || item.href.startsWith('https://')
+        }))
+        console.log('Returning default navigation items:', defaultItems)
+        return res.status(200).json({ items: defaultItems })
+      }
 
       // Transform the data to match the expected structure
       const transformedItems = items.map((item: { 
@@ -46,11 +52,19 @@ const handler = async (
         url: item.href, // Map href to url for consistency
         isExternal: item.href.startsWith('http://') || item.href.startsWith('https://')
       }))
+      console.log('Transformed navigation items:', transformedItems)
 
       return res.status(200).json({ items: transformedItems })
     } catch (error) {
       console.error("Error fetching navigation items:", error)
-      return res.status(500).json({ error: "Failed to fetch navigation items" })
+      // Return default items on error
+      const defaultItems = defaultNavigationItems.map((item: NavigationItem) => ({
+        ...item,
+        url: item.href,
+        isExternal: item.href.startsWith('http://') || item.href.startsWith('https://')
+      }))
+      console.log('Error occurred, returning default navigation items:', defaultItems)
+      return res.status(200).json({ items: defaultItems })
     }
   }
 
