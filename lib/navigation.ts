@@ -64,9 +64,4 @@ export function getNavigationItems(): NavigationItem[] {
   return [...defaultNavigationItems]
     .filter(item => item.isActive)
     .sort((a, b) => a.order - b.order)
-}
-
-module.exports = {
-  defaultNavigationItems,
-  getNavigationItems
 } 

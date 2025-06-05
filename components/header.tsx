@@ -5,7 +5,7 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Menu, X, Heart, ExternalLink } from "lucide-react"
 import { useState, useEffect } from "react"
-import { NavigationItem } from "@/lib/navigation"
+import { NavigationItem, defaultNavigationItems } from "@/lib/navigation"
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
@@ -17,7 +17,13 @@ export default function Header() {
     const fetchNavigationItems = async () => {
       try {
         console.log('Fetching navigation items...')
-        const response = await fetch('/api/admin/navigation')
+        const response = await fetch('/api/admin/navigation', {
+          // Add cache control headers
+          headers: {
+            'Cache-Control': 'no-cache, no-store, must-revalidate',
+            'Pragma': 'no-cache'
+          }
+        })
         console.log('Navigation API response status:', response.status)
         
         if (!response.ok) {
@@ -27,7 +33,10 @@ export default function Header() {
             statusText: response.statusText,
             body: errorText
           })
-          throw new Error(`Failed to fetch navigation items: ${response.status} ${response.statusText}`)
+          // Use default items on error
+          console.log('Using default navigation items due to API error')
+          setNavigationItems(defaultNavigationItems)
+          return
         }
         
         const data = await response.json()
@@ -35,11 +44,21 @@ export default function Header() {
         
         if (!data.items || !Array.isArray(data.items)) {
           console.error('Invalid navigation items data:', data)
-          throw new Error('Invalid navigation items data received')
+          // Use default items if data is invalid
+          console.log('Using default navigation items due to invalid data')
+          setNavigationItems(defaultNavigationItems)
+          return
         }
         
         const items = data.items.filter((item: NavigationItem) => item.isActive)
         console.log('Filtered active navigation items:', items)
+        
+        // If no active items, use defaults
+        if (items.length === 0) {
+          console.log('No active items found, using default navigation items')
+          setNavigationItems(defaultNavigationItems)
+          return
+        }
         
         setNavigationItems(items)
         // Find the donate link
@@ -49,8 +68,9 @@ export default function Header() {
         }
       } catch (err) {
         console.error('Error fetching navigation items:', err)
-        // Set empty navigation items on error
-        setNavigationItems([])
+        // Use default items on any error
+        console.log('Using default navigation items due to fetch error')
+        setNavigationItems(defaultNavigationItems)
       } finally {
         setLoading(false)
       }
@@ -104,7 +124,7 @@ export default function Header() {
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-8">
-            {!loading && navigationItems.map((item) => 
+            {navigationItems.map((item) => 
               renderNavLink(item, "text-gray-700 hover:text-green-600 transition-colors")
             )}
           </nav>
@@ -135,7 +155,7 @@ export default function Header() {
         {isMenuOpen && (
           <div className="md:hidden mt-4 pb-4 border-t">
             <nav className="flex flex-col space-y-4 mt-4">
-              {!loading && navigationItems.map((item) => 
+              {navigationItems.map((item) => 
                 renderNavLink(
                   item,
                   "text-gray-700 hover:text-green-600 flex items-center gap-1"

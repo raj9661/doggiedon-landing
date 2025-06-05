@@ -13,8 +13,36 @@ const handler = async (
   req: NextApiRequest,
   res: NextApiResponse<ResponseData>
 ) => {
+  // Add CORS headers
+  res.setHeader('Access-Control-Allow-Origin', '*')
+  res.setHeader('Access-Control-Allow-Methods', 'GET, PUT, OPTIONS')
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type')
+
+  // Handle preflight requests
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end()
+  }
+
   if (req.method === 'GET') {
     try {
+      // Test database connection
+      try {
+        await prisma.$connect()
+        console.log('Database connection successful')
+      } catch (dbError) {
+        console.error('Database connection error:', dbError)
+        // Return default items if database connection fails
+        const defaultItems = defaultNavigationItems.map((item: NavigationItem) => ({
+          ...item,
+          url: item.href,
+          isExternal: item.href.startsWith('http://') || item.href.startsWith('https://')
+        }))
+        return res.status(200).json({ 
+          items: defaultItems,
+          message: 'Using default navigation items due to database connection issue'
+        })
+      }
+
       console.log('Fetching navigation items from database...')
       const items = await prisma.navigationItem.findMany({
         orderBy: { order: 'asc' },
@@ -25,10 +53,27 @@ const handler = async (
           order: true,
           isActive: true
         }
+      }).catch(queryError => {
+        console.error('Database query error:', queryError)
+        return null
       })
+
+      if (!items) {
+        console.log('Database query failed, using default items')
+        const defaultItems = defaultNavigationItems.map((item: NavigationItem) => ({
+          ...item,
+          url: item.href,
+          isExternal: item.href.startsWith('http://') || item.href.startsWith('https://')
+        }))
+        return res.status(200).json({ 
+          items: defaultItems,
+          message: 'Using default navigation items due to database query error'
+        })
+      }
+
       console.log('Found navigation items:', items)
 
-      if (!items || items.length === 0) {
+      if (items.length === 0) {
         console.log('No navigation items found in database')
         // Return default items if none found in database
         const defaultItems = defaultNavigationItems.map((item: NavigationItem) => ({
@@ -37,7 +82,10 @@ const handler = async (
           isExternal: item.href.startsWith('http://') || item.href.startsWith('https://')
         }))
         console.log('Returning default navigation items:', defaultItems)
-        return res.status(200).json({ items: defaultItems })
+        return res.status(200).json({ 
+          items: defaultItems,
+          message: 'Using default navigation items as database is empty'
+        })
       }
 
       // Transform the data to match the expected structure
@@ -56,15 +104,24 @@ const handler = async (
 
       return res.status(200).json({ items: transformedItems })
     } catch (error) {
-      console.error("Error fetching navigation items:", error)
-      // Return default items on error
+      console.error("Error in navigation API:", error)
+      // Return default items on any error
       const defaultItems = defaultNavigationItems.map((item: NavigationItem) => ({
         ...item,
         url: item.href,
         isExternal: item.href.startsWith('http://') || item.href.startsWith('https://')
       }))
-      console.log('Error occurred, returning default navigation items:', defaultItems)
-      return res.status(200).json({ items: defaultItems })
+      return res.status(200).json({ 
+        items: defaultItems,
+        message: 'Using default navigation items due to an error'
+      })
+    } finally {
+      // Always disconnect from the database
+      try {
+        await prisma.$disconnect()
+      } catch (disconnectError) {
+        console.error('Error disconnecting from database:', disconnectError)
+      }
     }
   }
 
