@@ -30,16 +30,23 @@ export default function AdminLogin() {
       })
 
       const data = await response.json()
+      console.log('Login response:', data)
 
       if (!response.ok) {
         throw new Error(data.error || "Failed to login")
       }
 
       // Store admin info in localStorage
-      localStorage.setItem("adminInfo", JSON.stringify({
-        id: data.id,
-        username: data.username
-      }))
+      const adminInfo = {
+        id: data.admin.id,
+        username: data.admin.username
+      }
+      console.log('Storing admin info:', adminInfo)
+      localStorage.setItem("adminInfo", JSON.stringify(adminInfo))
+
+      // Verify storage
+      const storedInfo = localStorage.getItem("adminInfo")
+      console.log('Verified stored admin info:', storedInfo)
 
       // Redirect to admin dashboard
       router.push("/admin")

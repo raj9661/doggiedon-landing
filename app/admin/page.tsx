@@ -36,8 +36,27 @@ export default function AdminDashboard() {
     const fetchNavigationItems = async () => {
       try {
         // Check for admin info in localStorage
-        const adminInfo = localStorage.getItem("adminInfo")
-        if (!adminInfo) {
+        const adminInfoStr = localStorage.getItem("adminInfo")
+        console.log('Raw admin info from localStorage:', adminInfoStr)
+        
+        if (!adminInfoStr) {
+          console.log('No admin info found in localStorage')
+          router.push("/admin/login")
+          return
+        }
+
+        let adminInfo
+        try {
+          adminInfo = JSON.parse(adminInfoStr)
+          console.log('Parsed admin info:', adminInfo)
+          
+          if (!adminInfo.id) {
+            console.log('Admin info missing ID:', adminInfo)
+            router.push("/admin/login")
+            return
+          }
+        } catch (e) {
+          console.error('Error parsing admin info:', e)
           router.push("/admin/login")
           return
         }
@@ -87,22 +106,54 @@ export default function AdminDashboard() {
       return
     }
 
+    if (!currentPassword || !newPassword) {
+      setPasswordError("Please fill in all password fields")
+      return
+    }
+
     setIsChangingPassword(true)
     try {
-      const adminInfo = JSON.parse(localStorage.getItem("adminInfo") || "{}")
+      const adminInfoStr = localStorage.getItem("adminInfo")
+      console.log('Raw admin info before password change:', adminInfoStr)
+      
+      if (!adminInfoStr) {
+        throw new Error('No admin info found. Please log in again.')
+      }
+
+      let adminInfo
+      try {
+        adminInfo = JSON.parse(adminInfoStr)
+        console.log('Parsed admin info for password change:', adminInfo)
+        
+        if (!adminInfo.id) {
+          throw new Error('Invalid admin info. Please log in again.')
+        }
+      } catch (e) {
+        console.error('Error parsing admin info:', e)
+        throw new Error('Invalid admin info. Please log in again.')
+      }
+      
+      const requestData = {
+        adminId: adminInfo.id,
+        currentPassword,
+        newPassword,
+      }
+      console.log('Sending password change request with data:', {
+        ...requestData,
+        currentPassword: '***',
+        newPassword: '***'
+      })
+      
       const response = await fetch('/api/admin/change-password', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          adminId: adminInfo.id,
-          currentPassword,
-          newPassword,
-        }),
+        body: JSON.stringify(requestData),
       })
 
       const data = await response.json()
+      console.log('Password change response:', data)
 
       if (!response.ok) {
         throw new Error(data.error || 'Failed to change password')
