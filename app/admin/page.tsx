@@ -127,19 +127,35 @@ export default function AdminDashboard() {
     try {
       setError('')
       setIsSaving(true)
+      const itemsToSave = navigationItems.map(item => ({
+        ...item,
+        url: item.href
+      }))
+      
       const res = await fetch('/api/admin/navigation', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(navigationItems),
+        body: JSON.stringify(itemsToSave),
       })
 
+      const data = await res.json()
       if (!res.ok) {
-        const data = await res.json()
         throw new Error(data.error || 'Failed to save navigation items')
       }
       
       setSuccess('Navigation items saved successfully!')
+      
+      // Refresh the navigation items
+      const refreshResponse = await fetch("/api/admin/navigation", {
+        cache: 'no-store',
+        headers: { 'Cache-Control': 'no-cache' }
+      })
+      if (refreshResponse.ok) {
+        const refreshData = await refreshResponse.json()
+        setNavigationItems(refreshData.items || [])
+      }
     } catch (err) {
+      console.error('Save error:', err)
       setError(err instanceof Error ? err.message : 'Failed to save navigation items')
     } finally {
       setIsSaving(false)
@@ -150,9 +166,13 @@ export default function AdminDashboard() {
     // If updating href, ensure it has proper protocol for external links
     if (updates.href) {
       const href = updates.href.trim()
-      // If it's an external link (starts with www. or contains a dot and no slash)
-      if (href.startsWith('www.') || (href.includes('.') && !href.includes('/'))) {
-        updates.href = `https://${href}`
+      // Check if it's an external link (starts with http://, https://, or www.)
+      if (href.startsWith('www.') || (!href.startsWith('/') && !href.startsWith('#'))) {
+        // Add https:// if not present
+        updates.href = href.startsWith('http') ? href : `https://${href}`
+        updates.isExternal = true
+      } else {
+        updates.isExternal = false
       }
     }
     
@@ -257,14 +277,14 @@ export default function AdminDashboard() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            {error && (
-              <Alert variant="destructive" className="mb-4">
-                <AlertDescription>{error}</AlertDescription>
+            {success && (
+              <Alert className="mb-4" variant="default">
+                <AlertDescription>{success}</AlertDescription>
               </Alert>
             )}
-            {success && (
-              <Alert className="mb-4">
-                <AlertDescription>{success}</AlertDescription>
+            {error && (
+              <Alert className="mb-4" variant="destructive">
+                <AlertDescription>{error}</AlertDescription>
               </Alert>
             )}
             <div className="space-y-4">
@@ -298,9 +318,18 @@ export default function AdminDashboard() {
                   </div>
                 </div>
               ))}
-              <Button onClick={handleSaveNavigation} className="w-full" disabled={isSaving}>
+              <Button 
+                onClick={handleSaveNavigation} 
+                className="w-full" 
+                disabled={isSaving}
+                variant={success ? "default" : error ? "destructive" : "default"}
+              >
                 {isSaving ? (
                   "Saving..."
+                ) : success ? (
+                  "✓ Changes Saved!"
+                ) : error ? (
+                  "✕ Save Failed"
                 ) : (
                   <>
                     <Save className="w-4 h-4 mr-2" />
@@ -308,6 +337,16 @@ export default function AdminDashboard() {
                   </>
                 )}
               </Button>
+              {(success || error) && (
+                <Alert 
+                  className="mt-4" 
+                  variant={success ? "default" : "destructive"}
+                >
+                  <AlertDescription>
+                    {success || error}
+                  </AlertDescription>
+                </Alert>
+              )}
             </div>
           </CardContent>
         </Card>

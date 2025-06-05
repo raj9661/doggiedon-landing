@@ -3,7 +3,6 @@
 import Header from "@/components/header"
 import Hero from "@/components/hero"
 import Testimonials from "@/components/testimonials"
-import { Button } from "@/components/ui/button"
 import { Heart } from "lucide-react"
 import Footer from "@/components/footer"
 import { useState, useEffect } from "react"
@@ -39,7 +38,7 @@ export default function Home() {
       
       {/* Donation CTA Section */}
       <section className="py-20 bg-gradient-to-b from-white to-green-50">
-        <div className="container mx-auto px-4">
+        <div className="container">
           <div className="text-center max-w-3xl mx-auto">
             <h2 className="text-4xl font-bold text-gray-900 mb-6">Ready to Make a Difference?</h2>
             <p className="text-xl text-gray-600 mb-8">
@@ -50,11 +49,10 @@ export default function Home() {
                 href={donateLink}
                 target="_blank"
                 rel="noopener noreferrer"
+                className="button button-primary"
               >
-                <Button className="bg-green-600 hover:bg-green-700 text-white px-8 py-6 rounded-lg text-lg">
-                  <Heart className="w-6 h-6 mr-2" />
-                  Donate Now
-                </Button>
+                <Heart className="w-6 h-6 mr-2" />
+                Donate Now
               </a>
             )}
           </div>
