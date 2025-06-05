@@ -1,3 +1,5 @@
+export const runtime = 'nodejs';
+
 import { NextResponse } from 'next/server';
 
 // Mock database of donors with unique IDs
@@ -24,21 +26,46 @@ const allDonors = Array.from({ length: 100 }, (_, i) => {
 });
 
 export async function GET(request: Request) {
-  const { searchParams } = new URL(request.url);
-  const page = parseInt(searchParams.get('page') || '1');
-  const limit = parseInt(searchParams.get('limit') || '6');
-  
-  const start = (page - 1) * limit;
-  const end = start + limit;
-  const donors = allDonors.slice(start, end);
-  const hasMore = end < allDonors.length;
+  try {
+    // Validate and parse query parameters
+    const { searchParams } = new URL(request.url);
+    const page = Math.max(1, parseInt(searchParams.get('page') || '1'));
+    const limit = Math.min(50, Math.max(1, parseInt(searchParams.get('limit') || '6')));
+    
+    const start = (page - 1) * limit;
+    const end = start + limit;
+    
+    // Ensure we don't go out of bounds
+    if (start >= allDonors.length) {
+      return NextResponse.json({
+        donors: [],
+        hasMore: false,
+        total: allDonors.length,
+        page,
+        limit
+      }, { status: 200 });
+    }
 
-  // Simulate network delay
-  await new Promise(resolve => setTimeout(resolve, 500));
+    const donors = allDonors.slice(start, end);
+    const hasMore = end < allDonors.length;
 
-  return NextResponse.json({
-    donors,
-    hasMore,
-    total: allDonors.length
-  });
+    // Return consistent response structure
+    return NextResponse.json({
+      donors,
+      hasMore,
+      total: allDonors.length,
+      page,
+      limit
+    }, { status: 200 });
+
+  } catch (error) {
+    console.error('Donors API Error:', error);
+    return NextResponse.json({
+      error: 'Internal Server Error',
+      message: 'Failed to fetch donors data',
+      donors: [],
+      hasMore: false,
+      total: 0
+    }, { status: 500 });
+  }
 } 
