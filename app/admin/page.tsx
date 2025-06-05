@@ -100,6 +100,7 @@ export default function AdminDashboard() {
   const handlePasswordChange = async (e: React.FormEvent) => {
     e.preventDefault()
     setPasswordError(null)
+    setSuccess(null)
 
     if (newPassword !== confirmPassword) {
       setPasswordError("New passwords don't match")
@@ -114,8 +115,6 @@ export default function AdminDashboard() {
     setIsChangingPassword(true)
     try {
       const adminInfoStr = localStorage.getItem("adminInfo")
-      console.log('Raw admin info before password change:', adminInfoStr)
-      
       if (!adminInfoStr) {
         throw new Error('No admin info found. Please log in again.')
       }
@@ -123,9 +122,7 @@ export default function AdminDashboard() {
       let adminInfo
       try {
         adminInfo = JSON.parse(adminInfoStr)
-        console.log('Parsed admin info for password change:', adminInfo)
-        
-        if (!adminInfo.id) {
+        if (!adminInfo?.id) {
           throw new Error('Invalid admin info. Please log in again.')
         }
       } catch (e) {
@@ -133,30 +130,32 @@ export default function AdminDashboard() {
         throw new Error('Invalid admin info. Please log in again.')
       }
       
-      const requestData = {
-        adminId: adminInfo.id,
-        currentPassword,
-        newPassword,
-      }
-      console.log('Sending password change request with data:', {
-        ...requestData,
-        currentPassword: '***',
-        newPassword: '***'
-      })
-      
       const response = await fetch('/api/admin/change-password', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(requestData),
+        body: JSON.stringify({
+          adminId: adminInfo.id,
+          currentPassword,
+          newPassword,
+        }),
       })
 
-      const data = await response.json()
-      console.log('Password change response:', data)
+      let data
+      try {
+        data = await response.json()
+      } catch (e) {
+        console.error('Error parsing response:', e)
+        throw new Error('Invalid response from server')
+      }
 
       if (!response.ok) {
         throw new Error(data.error || 'Failed to change password')
+      }
+
+      if (!data.success) {
+        throw new Error(data.error || 'Password change was not successful')
       }
 
       // Clear form and close modal
@@ -165,10 +164,18 @@ export default function AdminDashboard() {
       setConfirmPassword("")
       setShowPasswordModal(false)
       
-      // Show success message (you can use your toast notification system here)
-      setSuccess('Password changed successfully')
-    } catch (err) {
-      setPasswordError(err instanceof Error ? err.message : 'Failed to change password')
+      // Show success message
+      setSuccess(data.message || 'Password changed successfully')
+    } catch (err: unknown) {
+      console.error('Password change error:', err)
+      const errorMessage = err instanceof Error ? err.message : 'Failed to change password'
+      setPasswordError(errorMessage)
+      
+      // If there's an error with admin info, redirect to login
+      if (errorMessage.includes('admin info') || errorMessage.includes('log in')) {
+        localStorage.removeItem('adminInfo')
+        router.push('/admin/login')
+      }
     } finally {
       setIsChangingPassword(false)
     }
