@@ -1,0 +1,16 @@
+.env*
+.git
+.gitignore
+.next
+.vscode
+README.md
+coverage
+node_modules/.cache
+node_modules/.bin
+node_modules/@next
+node_modules/@types
+node_modules/@vercel
+# DO NOT ignore these Prisma directories
+!node_modules/.prisma
+!node_modules/@prisma
+!.prisma 
