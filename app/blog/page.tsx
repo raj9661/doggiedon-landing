@@ -19,15 +19,24 @@ export default function BlogPage() {
           throw new Error('Failed to fetch navigation items')
         }
         const data = await response.json()
-        const apkItem = data.items.find((item: NavigationItem) => 
-          item.label.toLowerCase() === 'download app' || 
+
+        // Try to find a valid download link from navigation
+        const apkItem = data.items.find((item: NavigationItem) =>
+          item.label.toLowerCase() === 'download app' ||
           item.label.toLowerCase() === 'get app'
         )
-        if (apkItem) {
+
+        // If not found, fallback to hardcoded Firebase link
+        if (apkItem?.href) {
           setApkLink(apkItem.href)
+        } else {
+          setApkLink("https://firebasestorage.googleapis.com/v0/b/livechat-7826e.firebasestorage.app/o/DoggieDon.apk?alt=media&token=a18ca54e-d5f4-4ed4-badb-ba44b5de1155")
         }
+
       } catch (err) {
         console.error('Error fetching navigation items:', err)
+        // fallback if fetch fails
+        setApkLink("https://firebasestorage.googleapis.com/v0/b/livechat-7826e.firebasestorage.app/o/DoggieDon.apk?alt=media&token=a18ca54e-d5f4-4ed4-badb-ba44b5de1155")
       } finally {
         setLoading(false)
       }
@@ -39,7 +48,7 @@ export default function BlogPage() {
   return (
     <div className="min-h-screen bg-white">
       <Header />
-      
+
       <main className="container mx-auto px-4 py-12">
         {/* Blog Access Message Section */}
         <section className="max-w-4xl mx-auto bg-gradient-to-br from-green-50 to-green-100 rounded-2xl p-12 mb-12">
@@ -74,6 +83,7 @@ export default function BlogPage() {
                 </li>
               </ul>
             </div>
+
             {loading ? (
               <div className="animate-pulse h-14 w-56 bg-gray-200 rounded-lg mx-auto"></div>
             ) : apkLink ? (
@@ -94,6 +104,7 @@ export default function BlogPage() {
                 Download link will be available soon
               </p>
             )}
+
             <p className="mt-6 text-sm text-gray-500">
               Available for Android devices. iOS version coming soon.
             </p>
@@ -114,4 +125,4 @@ export default function BlogPage() {
       <Footer />
     </div>
   )
-} 
+}
