@@ -46,25 +46,38 @@ export default function BlogPage() {
   }, [])
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen relative overflow-hidden">
+      {/* Background Video */}
+      <video
+        autoPlay
+        loop
+        muted
+        playsInline
+        className="video-background"
+        poster="/placeholder.jpg"
+      >
+        <source src="/blog_bg.mp4" type="video/mp4" />
+        Your browser does not support the video tag.
+      </video>
+
       <Header />
 
-      <main className="container mx-auto px-4 py-12">
+      <main className="container mx-auto px-4 py-12 relative z-10">
         {/* Blog Access Message Section */}
-        <section className="max-w-4xl mx-auto bg-gradient-to-br from-green-50 to-green-100 rounded-2xl p-12 mb-12">
+        <section className="max-w-4xl mx-auto glassmorphism rounded-2xl p-12 mb-12">
           <div className="text-center">
-            <div className="inline-block p-4 bg-white rounded-full mb-6 shadow-sm">
+            <div className="inline-block p-4 bg-white/80 backdrop-blur rounded-full mb-6 shadow-sm">
               <BookOpen className="w-12 h-12 text-green-600" />
             </div>
             <h1 className="text-4xl font-bold text-gray-900 mb-6">
               Exclusive Content Available on Our Mobile App
             </h1>
             <div className="max-w-2xl mx-auto">
-              <p className="text-xl text-gray-600 mb-8 leading-relaxed">
+              <p className="text-xl text-gray-800 mb-8 leading-relaxed">
                 To provide you with the best reading experience and keep you updated with our latest stories, 
                 we've moved our blog content exclusively to our mobile app. Download now to access:
               </p>
-              <ul className="text-lg text-gray-600 space-y-3 mb-10 text-left max-w-md mx-auto">
+              <ul className="text-lg text-gray-800 space-y-3 mb-10 text-left max-w-md mx-auto">
                 <li className="flex items-center">
                   <span className="w-2 h-2 bg-green-500 rounded-full mr-3"></span>
                   Heartwarming rescue stories
@@ -105,18 +118,18 @@ export default function BlogPage() {
               </p>
             )}
 
-            <p className="mt-6 text-sm text-gray-500">
+            <p className="mt-6 text-sm text-gray-700">
               Available for Android devices. iOS version coming soon.
             </p>
           </div>
         </section>
 
         {/* Coming Soon Section */}
-        <section className="max-w-4xl mx-auto text-center">
-          <h2 className="text-2xl font-semibold text-gray-700 mb-4">
+        <section className="max-w-4xl mx-auto text-center glassmorphism rounded-xl p-8">
+          <h2 className="text-2xl font-semibold text-gray-800 mb-4">
             Stay Connected
           </h2>
-          <p className="text-gray-600">
+          <p className="text-gray-800">
             Follow us on social media for updates and announcements about new blog posts and app features.
           </p>
         </section>

@@ -3,10 +3,20 @@
 import { Button } from "@/components/ui/button"
 import { Heart, Shield, Home } from "lucide-react"
 import Image from "next/image"
+import { useState } from "react"
 
 export default function Hero() {
+  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 })
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    const { left, top, width, height } = e.currentTarget.getBoundingClientRect()
+    const x = (e.clientX - left) / width
+    const y = (e.clientY - top) / height
+    setMousePosition({ x, y })
+  }
+
   return (
-    <section id="home" className="bg-gradient-to-br from-green-50 to-blue-50 py-20">
+    <section id="home" className="bg-gradient-to-br from-green-50 to-blue-50 py-20 overflow-hidden">
       <div className="container mx-auto px-4">
         <div className="grid lg:grid-cols-2 gap-12 items-center">
           <div className="space-y-8">
@@ -24,14 +34,14 @@ export default function Hero() {
               {/* <Button size="lg" className="bg-green-600 hover:bg-green-700 text-white px-8 py-4 text-lg">
                 <Heart className="w-5 h-5 mr-2" />
                 Donate Now
-              </Button> */}
+              </Button> 
               <Button
                 size="lg"
                 variant="outline"
                 className="border-green-600 text-green-600 hover:bg-green-50 px-8 py-4 text-lg"
               >
                 Learn More
-              </Button>
+              </Button>*/}
             </div>
 
             <div className="grid grid-cols-3 gap-6 pt-8">
@@ -59,17 +69,31 @@ export default function Hero() {
             </div>
           </div>
 
-          <div className="relative">
-            <div className="relative z-10">
+          <div 
+            className="relative image-3d-container"
+            onMouseMove={handleMouseMove}
+          >
+            <div 
+              className="relative z-10 image-3d"
+              style={{
+                transform: `
+                  rotateX(${(mousePosition.y - 0.5) * -10}deg)
+                  rotateY(${(mousePosition.x - 0.5) * 10}deg)
+                  translateZ(20px)
+                `
+              }}
+            >
+              <div className="image-3d-glow absolute inset-0 rounded-2xl"></div>
               <Image
                 src="/logo.png?height=600&width=500"
                 alt="Happy dogs in shelter"
                 width={500}
                 height={600}
                 className="rounded-2xl shadow-2xl"
+                priority
               />
             </div>
-            <div className="absolute -top-4 -right-4 w-full h-full bg-green-200 rounded-2xl -z-10"></div>
+            <div className="image-3d-shadow absolute -top-4 -right-4 w-full h-full bg-green-200 rounded-2xl -z-10"></div>
           </div>
         </div>
       </div>

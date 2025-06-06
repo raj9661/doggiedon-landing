@@ -98,6 +98,24 @@ export default function Header() {
         </a>
       )
     }
+    
+    // Handle smooth scrolling for contact link
+    if (item.href === '#contact') {
+      return (
+        <a
+          key={item.id}
+          href={item.href}
+          onClick={(e) => {
+            e.preventDefault()
+            document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' })
+          }}
+          className={className}
+        >
+          {item.label}
+        </a>
+      )
+    }
+    
     return (
       <Link
         key={item.id}

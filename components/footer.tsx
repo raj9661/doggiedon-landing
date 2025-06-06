@@ -6,11 +6,11 @@ import { Heart, Mail, Phone, MapPin, Facebook, Twitter, Instagram, Youtube } fro
 
 export default function Footer() {
   return (
-    <footer className="bg-gray-900 text-white">
+    <footer id="contact" className="bg-gray-900 text-white">
       <div className="container mx-auto px-4 py-16">
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+        <div className="flex flex-col md:flex-row justify-center gap-16 text-center md:text-left">
           {/* Logo and Description */}
-          <div className="lg:col-span-1">
+          <div className="lg:col-span-1 ">
             <Link href="/" className="flex items-center space-x-3 mb-6">
               <Image src="/logo.png" alt="DoggieDon Logo" width={50} height={50} className="rounded-full" />
               <div>
@@ -18,10 +18,11 @@ export default function Footer() {
                 <p className="text-sm text-gray-400">Caring for Every Paw</p>
               </div>
             </Link>
-            <p className="text-gray-400 mb-6 leading-relaxed">
+            <p className="text-gray-400 mb-6 leading-relaxed break-words w-full max-w-sm">
               Dedicated to providing love, care, and shelter to dogs in need. Together, we can make a difference in
               their lives.
             </p>
+          
             <div className="flex space-x-4">
               <Link href="#" className="bg-gray-800 hover:bg-green-600 p-2 rounded-full transition-colors">
                 <Facebook className="w-5 h-5" />
@@ -38,7 +39,7 @@ export default function Footer() {
             </div>
           </div>
 
-          {/* Quick Links */}
+          {/* Quick Links 
           <div>
             <h4 className="text-lg font-semibold mb-6">Quick Links</h4>
             <ul className="space-y-3">
@@ -47,7 +48,7 @@ export default function Footer() {
                   Home
                 </Link>
               </li>
-              <li>
+              {/*<li>
                 <Link href="#donate" className="text-gray-400 hover:text-green-400 transition-colors">
                   Donate Now
                 </Link>
@@ -73,9 +74,9 @@ export default function Footer() {
                 </Link>
               </li>
             </ul>
-          </div>
+          </div>*/}
 
-          {/* Donation Categories */}
+          {/* Donation Categories 
           <div>
             <h4 className="text-lg font-semibold mb-6">Ways to Help</h4>
             <ul className="space-y-3">
@@ -111,9 +112,10 @@ export default function Footer() {
               </li>
             </ul>
           </div>
+          */}
 
           {/* Contact Info */}
-          <div>
+          <div >
             <h4 className="text-lg font-semibold mb-6">Contact Us</h4>
             <div className="space-y-4">
               <div className="flex items-start space-x-3">
@@ -122,15 +124,15 @@ export default function Footer() {
                   <p className="text-gray-400">
                     123 Dog Care Street,
                     <br />
-                    Animal Welfare District,
+                    Bistupur District,
                     <br />
-                    Mumbai, Maharashtra 400001
+                    East Singhbhum, JHARKHAND 831013
                   </p>
                 </div>
               </div>
               <div className="flex items-center space-x-3">
                 <Phone className="w-5 h-5 text-green-400 flex-shrink-0" />
-                <p className="text-gray-400">+91 98765 43210</p>
+                <p className="text-gray-400">+91 74889 99999</p>
               </div>
               <div className="flex items-center space-x-3">
                 <Mail className="w-5 h-5 text-green-400 flex-shrink-0" />
@@ -172,7 +174,7 @@ export default function Footer() {
         <div className="border-t border-gray-800 mt-12 pt-8">
           <div className="flex flex-col md:flex-row justify-between items-center">
             <div className="text-gray-400 text-sm mb-4 md:mb-0">
-              © 2024 DoggieDon. All rights reserved. | Registered Charity No: 12345678
+              © 2025 DoggieDon. All rights reserved. | Registered Charity No: 12345678
             </div>
             <div className="flex space-x-6 text-sm">
               <Link href="/privacy" className="text-gray-400 hover:text-green-400 transition-colors">
