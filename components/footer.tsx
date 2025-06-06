@@ -6,24 +6,24 @@ import { Heart, Mail, Phone, MapPin, Facebook, Twitter, Instagram, Youtube } fro
 
 export default function Footer() {
   return (
-    <footer id="contact" className="bg-gray-900 text-white">
+    <footer className="bg-gray-900 text-white">
       <div className="container mx-auto px-4 py-16">
         <div className="flex flex-col md:flex-row justify-center gap-16 text-center md:text-left">
           {/* Logo and Description */}
-          <div className="lg:col-span-1 ">
-            <Link href="/" className="flex items-center space-x-3 mb-6">
+          <div className="lg:col-span-1">
+            <Link href="/" className="flex items-center justify-center md:justify-start space-x-3 mb-6">
               <Image src="/logo.png" alt="DoggieDon Logo" width={50} height={50} className="rounded-full" />
               <div>
                 <h3 className="text-2xl font-bold text-white">DoggieDon</h3>
                 <p className="text-sm text-gray-400">Caring for Every Paw</p>
               </div>
             </Link>
-            <p className="text-gray-400 mb-6 leading-relaxed break-words w-full max-w-sm">
+            <p className="text-gray-400 mb-6 leading-relaxed break-words w-full max-w-sm mx-auto md:mx-0">
               Dedicated to providing love, care, and shelter to dogs in need. Together, we can make a difference in
               their lives.
             </p>
           
-            <div className="flex space-x-4">
+            <div className="flex space-x-4 justify-center md:justify-start">
               <Link href="#" className="bg-gray-800 hover:bg-green-600 p-2 rounded-full transition-colors">
                 <Facebook className="w-5 h-5" />
               </Link>
@@ -115,12 +115,12 @@ export default function Footer() {
           */}
 
           {/* Contact Info */}
-          <div >
+          <div>
             <h4 className="text-lg font-semibold mb-6">Contact Us</h4>
             <div className="space-y-4">
-              <div className="flex items-start space-x-3">
-                <MapPin className="w-5 h-5 text-green-400 mt-1 flex-shrink-0" />
-                <div>
+              <div className="flex flex-col md:flex-row items-center md:items-start space-y-1 md:space-y-0 md:space-x-3">
+                <MapPin className="w-5 h-5 text-green-400 flex-shrink-0" />
+                <div className="text-center md:text-left">
                   <p className="text-gray-400">
                     123 Dog Care Street,
                     <br />
@@ -130,11 +130,11 @@ export default function Footer() {
                   </p>
                 </div>
               </div>
-              <div className="flex items-center space-x-3">
+              <div className="flex items-center justify-center md:justify-start space-x-3">
                 <Phone className="w-5 h-5 text-green-400 flex-shrink-0" />
                 <p className="text-gray-400">+91 74889 99999</p>
               </div>
-              <div className="flex items-center space-x-3">
+              <div className="flex items-center justify-center md:justify-start space-x-3">
                 <Mail className="w-5 h-5 text-green-400 flex-shrink-0" />
                 <p className="text-gray-400">help@doggiedon.org</p>
               </div>
@@ -176,7 +176,7 @@ export default function Footer() {
             <div className="text-gray-400 text-sm mb-4 md:mb-0">
               © 2025 DoggieDon. All rights reserved. | Registered Charity No: 12345678
             </div>
-            <div className="flex space-x-6 text-sm">
+            <div className="flex flex-col md:flex-row space-y-2 md:space-y-0 md:space-x-6 text-sm">
               <Link href="/privacy" className="text-gray-400 hover:text-green-400 transition-colors">
                 Privacy Policy
               </Link>
