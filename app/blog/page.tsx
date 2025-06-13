@@ -47,13 +47,13 @@ export default function BlogPage() {
         if (apkItem?.href) {
           setApkLink(apkItem.href)
         } else {
-          setApkLink("https://firebasestorage.googleapis.com/v0/b/livechat-7826e.firebasestorage.app/o/DoggieDon.apk?alt=media&token=a18ca54e-d5f4-4ed4-badb-ba44b5de1155")
+          setApkLink("https://f005.backblazeb2.com/file/Doggie-apk/DoggieDon.apk")
         }
 
       } catch (err) {
         console.error('Error fetching navigation items:', err)
         // fallback if fetch fails
-        setApkLink("https://firebasestorage.googleapis.com/v0/b/livechat-7826e.firebasestorage.app/o/DoggieDon.apk?alt=media&token=a18ca54e-d5f4-4ed4-badb-ba44b5de1155")
+        setApkLink("https://f005.backblazeb2.com/file/Doggie-apk/DoggieDon.apk")
       } finally {
         setLoading(false)
       }
